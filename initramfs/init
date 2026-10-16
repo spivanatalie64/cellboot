@@ -1,24 +1,87 @@
 #!/usr/bin/env bash
-# CellBoot KVM-host initramfs init — v0.1 scaffold stub.
+# CellBoot KVM-host initramfs init.
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2026 Natalie Cole-Clift Spiva / AcreetionOS.
 #
-# The REAL init lands in milestone 0.3 (see milestone/M0.3-guest-bringup.md):
-# mount the user's Windows ESP READ-ONLY on the host, stage a tmpfs-backed
-# guest scratch ESP, hand off to the KVM guest OVMF, serial-mark
-# CELLOVF-GUEST-START.
+# Semantics (contracted in milestone/M0.3-guest-bringup.md):
+#   1. mount the pseudo trees, print the identity banner on serial;
+#   2. resolve the Windows ESP (cmdline cellboot.esp= REQUIRED — guessing
+#      is forbidden; M0.3 adds BCD/path resolution on top of this);
+#   3. mount the Windows ESP READ-ONLY, verify the mount didn't land rw
+#      (read /proc/mounts back) — a rw mount is a FATAL, we poweroff;
+#   4. probe KVM (/dev/kvm) — no KVM is a FATAL, we poweroff honestly;
+#   5. hand off to the guest lane (M0.3: guest OVMF + loop device; marker
+#      CELLOVF-GUEST-START). Not implemented yet: explicit FATAL with the
+#      milestone pointer. Never a silent hang, never a fake continue.
 #
-# This stub exists so build.sh's syntax gate has something to check and so
-# the bootchain shape has a home. It refuses to do anything in real use.
+# Runs as PID1 in the initramfs only. Anything else = refuse (exit 122).
 set -u
-CELLBOOT_BANNER="cellboot-init v0.1 scaffold (stub)"
 
-if [ ! -e /proc/1/comm ] || [ "$(cat /proc/1/comm 2>/dev/null)" != "cellboot-scaffold" ]; then
-  echo "$CELLBOOT_BANNER"
-  echo "FATAL: stub init reached in a non-scaffold environment — refusing." >&2
-  echo "       The M0.3 milestone delivers the real host init." >&2
-  exit 122
+MOUNT_ESP_RW_FATAL=121  # distinct codes so harnesses can assert the mode
+KVM_FATAL=120
+NOT_PID1_FATAL=122
+HANDOFF_NOT_IMPLEMENTED=119
+
+CELLBOOT_ESP=""
+
+banner() { echo "cellboot-init: $*"; }
+haltfail() { # <code> <message>
+  local code="$1"; shift
+  echo "cellboot-init: FATAL: $*" >&2
+  echo "cellboot-init: powering off (exit $code)" >&2
+  sync
+  if command -v poweroff >/dev/null 2>&1; then poweroff -f; fi
+  exit "$code"
+}
+
+# --- refuse to run outside a real boot ----------------------------------------
+cur_comm="$(cat /proc/1/comm 2>/dev/null || true)"
+if [ "$(echo $$)" != "1" ] && [ "$cur_comm" != "cellboot-scaffold" ]; then
+  echo "cellboot-init: refusing non-PID1 environment (cur_comm=$cur_comm)"
+  exit "$NOT_PID1_FATAL"
 fi
 
-echo "$CELLBOOT_BANNER: scaffold environment OK, nothing to do yet."
-exit 0
+banner "v1.0 KVM host lane — lockdown laptop; Windows runs as guest"
+
+# --- 1. pseudo trees -------------------------------------------------------------
+mkdir -p /proc /sys /dev 2>/dev/null || true
+mount -t proc     proc   /proc 2>/dev/null || true
+mount -t sysfs    sys    /sys  2>/dev/null || true
+mount -t devtmpfs dev    /dev  2>/dev/null || true
+mount -t tmpfs    tmpfs  /run  2>/dev/null || true
+
+# --- 2. resolve the Windows ESP (REQUIRED param; no guessing) --------------------
+if [ -r /proc/cmdline ]; then
+  for kw in $(cat /proc/cmdline); do
+    case "$kw" in cellboot.esp=*) CELLBOOT_ESP="${kw#cellboot.esp=}";; esac
+  done
+fi
+[ -n "$CELLBOOT_ESP" ] || haltfail "$KVM_FATAL" "cellboot.esp= not passed on kernel cmdline — refusing to guess a Windows ESP"
+
+[ -e "$CELLBOOT_ESP" ] || haltfail "$KVM_FATAL" "cellboot.esp=$CELLBOOT_ESP does not exist on this host"
+
+# --- 3. read-only mount + guard (the hard rule of the project) --------------------
+mkdir -p /mnt/winesp
+if ! mount -t vfat -o ro "$CELLBOOT_ESP" /mnt/winesp 2>/dev/null; then
+  haltfail "$MOUNT_ESP_RW_FATAL" "mount(8) of $CELLBOOT_ESP failed; refusing rw fallback (sab discipline)"
+fi
+
+# Verify the mount is ro in /proc/mounts — assert, don't assume.
+if awk -v src="$CELLBOOT_ESP" '$1==src && $4 ~ /(^|,)rw(,|$)/ {found=1} END {exit found?0:1}' /proc/mounts; then
+  umount /mnt/winesp 2>/dev/null || true
+  haltfail "$MOUNT_ESP_RW_FATAL" "$CELLBOOT_ESP mounted rw — unmounting and powering off; Windows ESP is FOREVER ro on the host"
+fi
+banner "Windows ESP $CELLBOOT_ESP mounted READ-ONLY (verified in /proc/mounts)"
+
+# --- 4. KVM probe -----------------------------------------------------------------
+if [ ! -w /dev/kvm ] && [ ! -c /dev/kvm ]; then
+  haltfail "$KVM_FATAL" "/dev/kvm unavailable — cannot bring up the guest lane (never TCG in production)"
+fi
+banner "KVM present (/dev/kvm)"
+
+# --- 5. guest handoff ---------------------------------------------------------------
+# M0.3 (milestone/M0.3-guest-bringup.md) delivers: guest scratch ESP staging,
+# qemu/guest OVMF boot from the ro Windows ESP, CELLOVF-GUEST-START marker.
+# Until then: honest stop, never a silent hang.
+banner "stage complete; guest handoff NOT yet implemented (M0.3)"
+haltfail "$HANDOFF_NOT_IMPLEMENTED" "cellboot host init complete up to the guest boundary; M0.3 not merged"

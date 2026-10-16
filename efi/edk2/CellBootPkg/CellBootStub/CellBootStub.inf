@@ -20,4 +20,4 @@
   UefiLib
 
 [BuildOptions]
-  *_*_*_CC_FLAGS = -Wall -Wextra
+  *_*_*_CC_FLAGS = -Wall -Wextra -Wno-unused-parameter

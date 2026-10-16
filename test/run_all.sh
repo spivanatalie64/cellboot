@@ -34,18 +34,21 @@ grep -q 'CELL-PAYLOAD-OK' "$ROOT/efi/edk2/CellBootPkg/CellBootStub/CellBootStub.
   && pass "CELL-PAYLOAD-OK marker present in stub" \
   || fail "CELL-PAYLOAD-OK marker missing from stub"
 
-# 4. initramfs/init must refuse to run as real init (stub discipline).
+# 4. initramfs/init must refuse to run outside a real boot (real init has this
+#    contract baked in: PID1 or scaffold-environment only).
 chmod +x "$ROOT/initramfs/init" 2>/dev/null || true
 if ! "$ROOT/initramfs/init" >/dev/null 2>&1; then
-  pass "initramfs/init stub refuses real environment (as designed)"
+  pass "initramfs/init refuses non-PID1 environment (contract intact)"
 else
-  fail "initramfs/init failed to refuse real environment"
+  fail "initramfs/init failed to refuse non-PID1 environment"
 fi
 
-# 5. Launcher banner must be honest about what isn't real yet.
-grep -q 'M0.2 TODO' "$ROOT/efi/edk2/CellBootPkg/CellLauncher/CellBootLauncher.c" \
-  && pass "launcher banner carries its honest TODO" \
-  || fail "launcher banner lost its honest TODO guard"
+# 5. Launcher must carry REAL dispatch now: LoadImage + StartImage, and the
+#    honest banner about host-chain ownership. No scaffold TODOs left.
+grep -q 'LoadImage' "$ROOT/efi/edk2/CellBootPkg/CellLauncher/CellBootLauncher.c" \
+  && grep -q 'StartImage' "$ROOT/efi/edk2/CellBootPkg/CellLauncher/CellBootLauncher.c" \
+  && pass "launcher carries real LoadImage+StartImage dispatch" \
+  || fail "launcher does not carry real LoadImage+StartImage dispatch"
 
 # 6. No Microsoft boot path dependence in tracked sources (README documents
 #    why Windows runs as a guest; no tracked file may point at the
@@ -60,4 +63,12 @@ if [ "$fails" -gt 0 ]; then
   echo "TESTS: $fails FAILED" >&2
   exit 1
 fi
+
+# 7. OVMF e2e — only when an EFI output is staged (honest skip otherwise).
+if [ -f "$ROOT/build/efi-output/CellBootLauncher.efi" ] && command -v qemu-system-x86_64 >/dev/null; then
+  "$ROOT/test/test_ovmf_boot.sh"
+else
+  echo "SKIP: OVMF e2e (no build/efi-output or no qemu — run CELLBOOT_BUILD_EFI=1 ./build.sh)"
+fi
+
 echo "TESTS: all green"
