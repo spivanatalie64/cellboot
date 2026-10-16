@@ -1,0 +1,23 @@
+# CellBootStub — OVMF payload stand-in for the M0.2 end-to-end proof
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Natalie Cole-Clift Spiva / AcreetionOS.
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = CellBootStub
+  FILE_GUID                      = 820297A8-4BFB-4AD8-A3E2-FCD12D719763
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = CellBootStubEntry
+
+[Sources]
+  CellBootStub.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+
+[BuildOptions]
+  *_*_*_CC_FLAGS = -Wall -Wextra

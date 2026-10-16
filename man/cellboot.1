@@ -1,0 +1,32 @@
+.\"
+.\" CellBoot — cellboot(1) stub man page (M0.1 scaffold)
+.\" SPDX-License-Identifier: BSD-3-Clause
+.\" Copyright (c) 2026 Natalie Cole-Clift Spiva / AcreetionOS.
+.TH CELLBOOT 1 "2026-10-15" "CellBoot v0.1" "User Commands"
+.SH NAME
+cellboot \- AcreetionOS's overwrite-immune Windows boot lane (KVM-guest launcher)
+.SH SYNOPSIS
+.B cellboot
+[will be a real command at
+.BR milestone/M0.6-cellbootctl.md ;
+today only the repo scaffold exists]
+.SH DESCRIPTION
+CellBoot boots Windows WITHOUT fighting Windows Update.
+\&\fB\EFI\cellboot\fR is a path Windows Update never learns about: the host
+EFI chain is entirely AcreetionOS-owned. CellBoot boots a minimal Linux
+KVM host and launches the \fBuser's own official, unmodified\fR Windows boot
+files as a KVM guest. Windows validates its own Secure Boot chain inside
+the guest; it cannot overwrite the host chain and cannot reset NVRAM to
+steal the boot.
+.sp
+VaultBoot, the guest boot lane, ships NO Windows; the user brings their own
+copy from Microsoft and owns license compliance (see README).
+.SH SEE ALSO
+.BR build.sh (repo entrypoint),
+.IR milestone/00-INDEX.md ,
+.IR docs/plan/00-PLAN.md
+.SH BUGS
+cellboot(1) is a stub man page for a v0 scaffold; the real CLI is
+milestone 0.6 (cellbootctl).
+.SH AUTHOR
+Natalie Cole-Clift Spiva / AcreetionOS

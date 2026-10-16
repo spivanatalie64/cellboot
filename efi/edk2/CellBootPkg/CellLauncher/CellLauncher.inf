@@ -1,0 +1,31 @@
+# CellLauncher — CellBoot's main EFI app (milestone 0.1 scaffold; M0.2 delivers
+# the real LoadImage+StartImage dispatch and the CELL-PAYLOAD-OK e2e proof)
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Natalie Cole-Clift Spiva / AcreetionOS.
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = CellBootLauncher
+  FILE_GUID                      = 6BC5E82D-9B91-486C-89E1-66F261A7468B
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = CellBootLauncherEntry
+
+[Sources]
+  CellBootLauncher.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  UefiBootServicesTableLib
+
+[Guids]
+  gEfiFileInfoGuid
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid
+
+[BuildOptions]
+  *_*_*_CC_FLAGS = -Wall -Wextra

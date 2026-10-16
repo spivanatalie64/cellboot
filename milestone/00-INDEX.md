@@ -10,7 +10,7 @@ License: BSD-3.
 
 | M    | One-liner                                                                    | Status | File |
 |------|------------------------------------------------------------------------------|--------|------|
-| 0.1  | Repo scaffold + sha256-pinned EDK2 bootstrap                                  | ⬜ planned | [M0.1-scaffold.md](M0.1-scaffold.md) |
+| 0.1  | Repo scaffold + sha256-pinned EDK2 bootstrap                                  | 🔨 scaffold landed, e2e receipt pending | [M0.1-scaffold.md](M0.1-scaffold.md) |
 | 0.2  | `CellBootLauncher.efi` boots a hardcoded PE32+ payload (LoadImage+StartImage) | ⬜ planned | [M0.2-payload-launch.md](M0.2-payload-launch.md) |
 | 0.3  | Guest bring-up: KVM host boots guest OVMF from the user's Windows ESP         | ⬜ planned | [M0.3-guest-bringup.md](M0.3-guest-bringup.md) |
 | 0.4  | Windows guest boots to winload/kernel inside KVM                              | ⬜ planned | [M0.4-windows-guest.md](M0.4-windows-guest.md) |
