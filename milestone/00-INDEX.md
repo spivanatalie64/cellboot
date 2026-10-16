@@ -10,9 +10,9 @@ License: BSD-3.
 
 | M    | One-liner                                                                    | Status | File |
 |------|------------------------------------------------------------------------------|--------|------|
-| 0.1  | Repo scaffold + sha256-pinned EDK2 bootstrap                                  | 🔨 scaffold landed, e2e receipt pending | [M0.1-scaffold.md](M0.1-scaffold.md) |
-| 0.2  | `CellBootLauncher.efi` boots a hardcoded PE32+ payload (LoadImage+StartImage) | ⬜ planned | [M0.2-payload-launch.md](M0.2-payload-launch.md) |
-| 0.3  | Guest bring-up: KVM host boots guest OVMF from the user's Windows ESP         | ⬜ planned | [M0.3-guest-bringup.md](M0.3-guest-bringup.md) |
+| 0.1  | Repo scaffold + sha256-pinned EDK2 bootstrap                                  | ✅ done | [M0.1-scaffold.md](M0.1-scaffold.md) |
+| 0.2  | `CellBootLauncher.efi` boots a hardcoded PE32+ payload (LoadImage+StartImage) | ✅ done | [M0.2-payload-launch.md](M0.2-payload-launch.md) |
+| 0.3  | Guest bring-up: KVM host boots guest OVMF from the user's Windows ESP         | 🔨 init host lane real (esp=, RO guard, KVM probe); guest OVMF next | [M0.3-guest-bringup.md](M0.3-guest-bringup.md) |
 | 0.4  | Windows guest boots to winload/kernel inside KVM                              | ⬜ planned | [M0.4-windows-guest.md](M0.4-windows-guest.md) |
 | 0.5  | NVRAM guard: refuse/restore Windows-side `BootOrder`/`BootNext` resets        | ⬜ planned | [M0.5-nvram-guard.md](M0.5-nvram-guard.md) |
 | 0.6  | `cellbootctl`: install / status / uninstall                                   | ⬜ planned | [M0.6-cellbootctl.md](M0.6-cellbootctl.md) |

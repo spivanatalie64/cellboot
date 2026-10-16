@@ -46,4 +46,12 @@ installer**. VaultBoot, the guest-boot lane of CellBoot, boots only the
 ## Status
 
 v0 scaffold. Proposed structure and milestones tracked in issue #1.
+
+## Source & tracking
+
+- GitHub: <https://github.com/spivanatalie64/cellboot> — current work lane:
+  `feature/cellboot`
+- Scaffold proposal + milestones: <https://github.com/spivanatalie64/cellboot/issues/1>
+- Per-milestone plan files: [`milestone/00-INDEX.md`](milestone/00-INDEX.md)
+- Long-form plan: [`docs/plan/00-PLAN.md`](docs/plan/00-PLAN.md)
 Owner/Co-Lead: Natalie (AcreetionOS). License: BSD-3.

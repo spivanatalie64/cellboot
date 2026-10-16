@@ -21,18 +21,27 @@ PKG="$ROOT/efi/edk2/CellBootPkg"
 [ -d "$EDK2" ] || { echo "FATAL: pinned EDK2 tree missing — run tools/edk2-bootstrap.sh first" >&2; exit 1; }
 [ -d "$PKG" ] || { echo "FATAL: CellBootPkg missing from $PKG" >&2; exit 1; }
 
+# edksetup.sh reads PYTHON_COMMAND unguarded; provide ours (edk2 toolcheck
+# runs its own python discovery otherwise, unbound under set -u).
+export PYTHON_COMMAND="${PYTHON_COMMAND:-python3}"
+mkdir -p "$BUILD/edk2-conf"   # CONF_PATH dir must exist for BaseTools/BuildEnv to write BuildEnv.sh
+
 echo "==> building CellBootPkg (X64)"
 (
   cd "$EDK2"
   export WORKSPACE="$EDK2"
   export CONF_PATH="$BUILD/edk2-conf"
+  # Our package lives in this repo (out of the EDK2 tree) — PACKAGES_PATH
+  # adds both roots; EDK2 first so MdePkg library classes resolve, ours
+  # second so CellBootPkg modules resolve.
+  export PACKAGES_PATH="$EDK2:$ROOT/efi/edk2"
+  # Upstream edksetup.sh is not -u-clean (EDK_TOOLS_PATH etc.) — relax -u for
+  # the sourcing only; -e stays on so any real build failure stops the lane.
+  set +u
   . ./edksetup.sh BaseTools
-  build -a X64 -b GCC5 -t GCC5 -p CellBootPkg/CellBootPkg.dsc
+  build -a X64 -b RELEASE -t GCC -p CellBootPkg/CellBootPkg.dsc
 )
-OUT="$EDK2/Build/CellBootPkg/DEBUG_GCC5/X64"
-if [ "${CELLBOOT_CONFIG:-release}" = "release" ]; then
-  OUT="$EDK2/Build/CellBootPkg/RELEASE_GCC5/X64"
-fi
+OUT="$EDK2/Build/CellBootPkg/RELEASE_GCC/X64"
 [ -d "$OUT" ] || { echo "FATAL: EDK2 produced no output at $OUT" >&2; exit 1; }
 
 mkdir -p "$BUILD/efi-output"
